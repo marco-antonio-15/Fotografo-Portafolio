@@ -1,0 +1,20 @@
+{
+  "name": "Angular 19 DevContainer",
+
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "forwardPorts": [4200],
+
+  "postCreateCommand": "npm install",
+  "postStartCommand": "ng serve --host 0.0.0.0",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Angular.ng-template",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

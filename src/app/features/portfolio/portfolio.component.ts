@@ -18,7 +18,6 @@ import { Photo, PhotoCategory } from '../../core/models';
         </h1>
       </div>
 
-      <!-- Category filters -->
       <div class="sticky top-[72px] z-40 bg-black/95 backdrop-blur-md border-b border-white/10 px-6 py-5">
         <div class="max-w-7xl mx-auto flex gap-6 overflow-x-auto scrollbar-hide">
           @for (cat of data.categories; track cat.id) {
@@ -33,7 +32,6 @@ import { Photo, PhotoCategory } from '../../core/models';
         </div>
       </div>
 
-      <!-- Masonry grid -->
       <div class="max-w-7xl mx-auto px-6 py-12">
         <div class="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 space-y-3">
           @for (photo of data.filteredPhotos(); track photo.id) {
