@@ -1,20 +1,23 @@
-import { Component, HostListener, signal, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { DataService } from 'src/app/core/services/data.service';
+import { Component, HostListener, signal, inject, OnInit, OnDestroy } from '@angular/core';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { DataService } from '@core/services/data.service';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <header
-      class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
-      [class.scrolled]="isScrolled()"
-    >
+    <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+            [class]="headerClass()">
       <nav class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
 
-        <!-- Logo / Brand -->
-        <a routerLink="/" class="brand-name text-white tracking-[0.2em] text-sm uppercase font-light">
+        <!-- Brand -->
+        <a routerLink="/"
+           [class]="isTransparent() ? 'text-white' : 'text-stone-900'"
+           class="tracking-[0.15em] uppercase transition-colors duration-500"
+           style="font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:500;">
           {{ data.photographerInfo.brandName }}
         </a>
 
@@ -22,12 +25,11 @@ import { DataService } from 'src/app/core/services/data.service';
         <ul class="hidden md:flex items-center gap-10">
           @for (link of navLinks; track link.path) {
             <li>
-              <a
-                [routerLink]="link.path"
-                routerLinkActive="nav-link-active"
-                [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-                class="nav-link text-white/70 hover:text-white text-xs tracking-[0.15em] uppercase transition-colors duration-300"
-              >
+              <a [routerLink]="link.path"
+                 routerLinkActive="nav-active"
+                 [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+                 [class]="linkClass()"
+                 class="text-xs tracking-[0.18em] uppercase transition-colors duration-300 font-medium">
                 {{ link.label }}
               </a>
             </li>
@@ -35,46 +37,42 @@ import { DataService } from 'src/app/core/services/data.service';
         </ul>
 
         <!-- CTA -->
-        <a
-          routerLink="/contacto"
-          class="hidden md:flex items-center gap-2 border border-white/30 hover:border-white text-white text-xs tracking-[0.15em] uppercase px-5 py-2.5 transition-all duration-300 hover:bg-white hover:text-black"
-        >
+        <a routerLink="/contacto"
+           [class]="isTransparent() ? 'bg-white text-stone-900 hover:bg-stone-100' : 'bg-stone-900 text-white hover:bg-stone-700'"
+           class="hidden md:inline-flex text-xs tracking-[0.15em] uppercase px-5 py-2.5 transition-all duration-300 font-medium">
           Cotizar sesión
         </a>
 
-        <!-- Mobile Hamburger -->
-        <button
-          class="md:hidden text-white flex flex-col gap-1.5 p-2"
-          (click)="toggleMenu()"
-          aria-label="Menu"
-        >
-          <span class="block w-6 h-px bg-white transition-all duration-300" [class.rotate-45]="menuOpen()" [class.translate-y-2]="menuOpen()"></span>
-          <span class="block w-6 h-px bg-white transition-all duration-300" [class.opacity-0]="menuOpen()"></span>
-          <span class="block w-6 h-px bg-white transition-all duration-300" [class.-rotate-45]="menuOpen()" [class.-translate-y-2]="menuOpen()"></span>
+        <!-- Mobile hamburger -->
+        <button class="md:hidden flex flex-col gap-1.5 p-2"
+                (click)="toggleMenu()" aria-label="Menu">
+          <span class="block w-6 h-0.5 transition-all duration-300"
+                [class]="isTransparent() ? 'bg-white' : 'bg-stone-800'"
+                [style.transform]="menuOpen() ? 'rotate(45deg) translateY(8px)' : 'none'"></span>
+          <span class="block w-6 h-0.5 transition-all duration-300"
+                [class]="isTransparent() ? 'bg-white' : 'bg-stone-800'"
+                [style.opacity]="menuOpen() ? '0' : '1'"></span>
+          <span class="block w-6 h-0.5 transition-all duration-300"
+                [class]="isTransparent() ? 'bg-white' : 'bg-stone-800'"
+                [style.transform]="menuOpen() ? 'rotate(-45deg) translateY(-8px)' : 'none'"></span>
         </button>
       </nav>
 
-      <!-- Mobile Menu -->
+      <!-- Mobile menu -->
       @if (menuOpen()) {
-        <div class="md:hidden bg-black/95 backdrop-blur-md border-t border-white/10 px-6 py-8">
+        <div class="md:hidden bg-white border-t border-stone-100 px-6 py-8 shadow-lg">
           <ul class="flex flex-col gap-6">
             @for (link of navLinks; track link.path) {
               <li>
-                <a
-                  [routerLink]="link.path"
-                  (click)="menuOpen.set(false)"
-                  class="text-white/70 hover:text-white text-sm tracking-[0.2em] uppercase transition-colors"
-                >
+                <a [routerLink]="link.path" (click)="closeMenu()"
+                   class="text-stone-700 hover:text-stone-900 text-sm tracking-[0.2em] uppercase transition-colors font-medium">
                   {{ link.label }}
                 </a>
               </li>
             }
-            <li class="pt-4 border-t border-white/10">
-              <a
-                routerLink="/contacto"
-                (click)="menuOpen.set(false)"
-                class="inline-block border border-white/30 text-white text-xs tracking-[0.15em] uppercase px-5 py-3"
-              >
+            <li class="pt-4 border-t border-stone-100">
+              <a routerLink="/contacto" (click)="closeMenu()"
+                 class="inline-block bg-stone-900 text-white text-xs tracking-[0.15em] uppercase px-5 py-3 font-medium">
                 Cotizar sesión
               </a>
             </li>
@@ -84,33 +82,25 @@ import { DataService } from 'src/app/core/services/data.service';
     </header>
   `,
   styles: [`
-    header {
-      background: transparent;
-    }
-    header.scrolled {
-      background: rgba(0, 0, 0, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .nav-link-active {
-      color: white !important;
-      position: relative;
-    }
-    .nav-link-active::after {
+    .nav-active { color: inherit !important; position: relative; opacity: 1 !important; }
+    .nav-active::after {
       content: '';
       position: absolute;
-      bottom: -4px;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: white;
+      bottom: -4px; left: 0; right: 0;
+      height: 1.5px;
+      background: currentColor;
     }
   `],
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   protected data = inject(DataService);
+  private router = inject(Router);
+
   protected isScrolled = signal(false);
+  protected isHomePage = signal(false);
   protected menuOpen = signal(false);
+
+  private routerSub?: Subscription;
 
   protected navLinks = [
     { path: '/', label: 'Inicio' },
@@ -120,12 +110,53 @@ export class NavbarComponent {
     { path: '/contacto', label: 'Contacto' },
   ];
 
-  @HostListener('window:scroll')
-  onScroll(): void {
-    this.isScrolled.set(window.scrollY > 50);
+  ngOnInit(): void {
+    // Detectar ruta inicial
+    this.checkRoute(this.router.url);
+
+    // Detectar cambios de ruta
+    this.routerSub = this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: NavigationEnd) => {
+        this.checkRoute(e.urlAfterRedirects);
+        // Al cambiar de ruta, resetear scroll position
+        this.isScrolled.set(window.scrollY > 60);
+        this.closeMenu();
+      });
   }
 
-  protected toggleMenu(): void {
-    this.menuOpen.update((v) => !v);
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  private checkRoute(url: string): void {
+    this.isHomePage.set(url === '/' || url === '');
+  }
+
+  // Transparente solo en Home sin scroll
+  protected isTransparent(): boolean {
+    return this.isHomePage() && !this.isScrolled();
+  }
+
+  protected headerClass(): string {
+    if (this.isTransparent()) {
+      return 'bg-transparent';
+    }
+    return 'bg-white/97 backdrop-blur-md border-b border-stone-200 shadow-sm';
+  }
+
+  protected linkClass(): string {
+    if (this.isTransparent()) {
+      return 'text-white/90 hover:text-white drop-shadow-sm';
+    }
+    return 'text-stone-600 hover:text-stone-900';
+  }
+
+  protected toggleMenu(): void { this.menuOpen.set(!this.menuOpen()); }
+  protected closeMenu(): void { this.menuOpen.set(false); }
+
+  @HostListener('window:scroll')
+  onScroll(): void {
+    this.isScrolled.set(window.scrollY > 60);
   }
 }
