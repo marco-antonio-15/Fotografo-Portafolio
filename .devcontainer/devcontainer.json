@@ -7,8 +7,8 @@
 
   "forwardPorts": [4200],
 
-  "postCreateCommand": "npm install",
-  "postStartCommand": "ng serve --host 0.0.0.0",
+  //"postCreateCommand": "npm install",
+  "postStartCommand": "ng serve --host 0.0.0.0 --poll 2000",
   "customizations": {
     "vscode": {
       "extensions": [

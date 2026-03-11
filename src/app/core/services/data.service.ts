@@ -6,32 +6,32 @@ import {
   ServicePackage,
   Testimonial,
   PhotographerInfo,
-} from '../models';
+} from '@core/models';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
 
   // ─── Photographer Info ───────────────────────────────────────────────────────
   readonly photographerInfo: PhotographerInfo = {
-    name: 'Carlos Mendoza',
-    brandName: 'Carlos Mendoza Photography',
+    name: 'Marco Luna',
+    brandName: 'Marco Luna Photography',
     tagline: 'Capturando emociones que duran para siempre',
     shortBio: 'Fotógrafo profesional con más de 10 años de experiencia en bodas, retratos y eventos.',
-    bio: `Mi nombre es Carlos Mendoza y llevo más de 10 años capturando los momentos más importantes
+    bio: `Mi nombre es Marco Antonio Luna Salas y llevo más de 10 años capturando los momentos más importantes
     en la vida de las personas. Creo que cada fotografía es una historia esperando ser contada,
     y mi misión es contarla con honestidad, belleza y emoción.
     Me especializo en bodas, XV años, retratos y eventos, pero lo que realmente me apasiona
     es conectar con mis clientes para entender qué hace único cada momento.`,
     experience: 10,
     profilePhoto: 'assets/images/photographer-profile.jpg',
-    email: 'hola@carlosmendozaphoto.com',
-    phone: '+52 81 1234 5678',
-    whatsapp: '528112345678',
+    email: 'hola@marcolunaphoto.com',
+    phone: '+52 81 1234 6587',
+    whatsapp: '528112346587',
     location: 'Monterrey, Nuevo León, México',
     social: [
-      { platform: 'instagram', url: 'https://instagram.com/carlosmendozaphoto', handle: '@carlosmendozaphoto' },
-      { platform: 'facebook', url: 'https://facebook.com/carlosmendozaphoto' },
-      { platform: 'tiktok', url: 'https://tiktok.com/@carlosmendozaphoto' },
+      { platform: 'instagram', url: 'https://instagram.com/marcolunaphoto', handle: '@marcolunaphoto' },
+      { platform: 'facebook', url: 'https://facebook.com/marcolunaphoto' },
+      { platform: 'tiktok', url: 'https://tiktok.com/@marcolunaphoto' },
     ],
   };
 
