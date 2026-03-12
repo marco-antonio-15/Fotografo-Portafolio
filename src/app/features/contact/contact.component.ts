@@ -1,34 +1,50 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DataService } from '@core/services/data.service';
+import { RevealDirective } from '@shared/directives/reveal.directive';
+
+type FormStatus = 'idle' | 'sending' | 'success' | 'error';
+
+interface ContactForm {
+  name: string;
+  email: string;
+  phone: string;
+  sessionType: string;
+  message: string;
+}
 
 @Component({
   selector: 'app-contact',
   standalone: true,
+  imports: [FormsModule, RevealDirective],
   template: `
     <div class="bg-[#faf9f7] min-h-screen pt-24">
 
       <div class="text-center py-16 px-6 border-b border-stone-200">
-        <p class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Hablemos</p>
-        <h1 class="text-stone-900 text-5xl md:text-6xl font-light" style="font-family:'Cormorant Garamond',serif">
-          Contacto
-        </h1>
+        <p appReveal="fade" class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Hablemos</p>
+        <h1 appReveal="slide-up" [revealDelay]="100"
+            class="text-stone-900 text-5xl md:text-6xl font-light"
+            style="font-family:'Cormorant Garamond',serif">Contacto</h1>
       </div>
 
       <div class="max-w-6xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-20">
 
-        <!-- Info -->
+        <!-- Info lateral -->
         <div>
-          <h2 class="text-stone-900 text-3xl font-light mb-6" style="font-family:'Cormorant Garamond',serif">
+          <h2 appReveal="slide-up"
+              class="text-stone-900 text-3xl font-light mb-6"
+              style="font-family:'Cormorant Garamond',serif">
             ¿Tienes un proyecto en mente?
           </h2>
-          <p class="text-stone-700 text-base leading-relaxed mb-12">
+          <p appReveal="slide-up" [revealDelay]="100"
+             class="text-stone-700 text-base leading-relaxed mb-12">
             Me encantaría conocer tu historia. Escríbeme y platicamos sobre
             cómo hacer de tu sesión una experiencia única.
           </p>
 
           <div class="space-y-4">
-
-            <a [href]="whatsappUrl" target="_blank"
+            <a appReveal="slide-left" [revealDelay]="0"
+               [href]="whatsappUrl" target="_blank"
                class="flex items-center gap-5 group border border-stone-200 bg-white p-5 hover:border-stone-400 hover:shadow-sm transition-all duration-300">
               <div class="w-10 h-10 border border-stone-200 flex items-center justify-center text-stone-500 group-hover:border-stone-400 flex-shrink-0">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -41,7 +57,8 @@ import { DataService } from '@core/services/data.service';
               </div>
             </a>
 
-            <a [href]="emailUrl"
+            <a appReveal="slide-left" [revealDelay]="100"
+               [href]="emailUrl"
                class="flex items-center gap-5 group border border-stone-200 bg-white p-5 hover:border-stone-400 hover:shadow-sm transition-all duration-300">
               <div class="w-10 h-10 border border-stone-200 flex items-center justify-center text-stone-500 group-hover:border-stone-400 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +71,8 @@ import { DataService } from '@core/services/data.service';
               </div>
             </a>
 
-            <div class="flex items-center gap-5 border border-stone-200 bg-white p-5">
+            <div appReveal="slide-left" [revealDelay]="200"
+                 class="flex items-center gap-5 border border-stone-200 bg-white p-5">
               <div class="w-10 h-10 border border-stone-200 flex items-center justify-center text-stone-500 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -68,7 +86,7 @@ import { DataService } from '@core/services/data.service';
             </div>
           </div>
 
-          <div class="flex gap-6 mt-8">
+          <div appReveal="fade" [revealDelay]="300" class="flex gap-6 mt-8">
             @for (s of data.photographerInfo.social; track s.platform) {
               <a [href]="s.url" target="_blank"
                  class="text-stone-400 hover:text-stone-900 text-xs tracking-[0.2em] uppercase transition-colors duration-300">
@@ -78,70 +96,158 @@ import { DataService } from '@core/services/data.service';
           </div>
         </div>
 
-        <!-- Form -->
-        <div class="bg-white p-10 border border-stone-200 shadow-sm">
-          <form (submit)="handleSubmit($event)" class="space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Nombre</label>
-                <input type="text" placeholder="Tu nombre"
-                       class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
+        <!-- Formulario -->
+        <div appReveal="slide-up" [revealDelay]="150"
+             class="bg-white p-10 border border-stone-200 shadow-sm">
+
+          <!-- Success state -->
+          @if (status() === 'success') {
+            <div class="h-full flex flex-col items-center justify-center text-center py-12">
+              <div class="w-16 h-16 border border-stone-200 flex items-center justify-center mb-6">
+                <svg class="w-7 h-7 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
+                </svg>
               </div>
-              <div>
-                <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Teléfono</label>
-                <input type="tel" placeholder="Tu teléfono"
-                       class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
-              </div>
-            </div>
-
-            <div>
-              <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Email</label>
-              <input type="email" placeholder="tu@email.com"
-                     class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
-            </div>
-
-            <div>
-              <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Tipo de sesión</label>
-              <select class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all">
-                <option value="">Selecciona una opción</option>
-                @for (cat of categories; track cat.id) {
-                  @if (cat.id !== 'all') {
-                    <option [value]="cat.id">{{ cat.label }}</option>
-                  }
-                }
-              </select>
-            </div>
-
-            <div>
-              <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Mensaje</label>
-              <textarea rows="5" placeholder="Cuéntame sobre tu evento o sesión..." class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300 resize-none"></textarea>
-            </div>
-
-            <button type="submit"
-                    class="w-full bg-stone-900 text-white text-xs tracking-[0.2em] uppercase py-4 hover:bg-stone-700 transition-all duration-300 font-medium">
-              Enviar mensaje
-            </button>
-
-            @if (sent()) {
-              <p class="text-stone-500 text-sm text-center tracking-wide">
-                ✓ Mensaje enviado. Te contactaré pronto.
+              <h3 class="text-stone-900 text-2xl font-light mb-3" style="font-family:'Cormorant Garamond',serif">
+                ¡Mensaje enviado!
+              </h3>
+              <p class="text-stone-600 text-sm leading-relaxed mb-8 max-w-xs">
+                Gracias por escribirme. Te contactaré en menos de 24 horas.
               </p>
-            }
-          </form>
+              <button (click)="resetForm()"
+                      class="text-stone-500 text-xs tracking-[0.2em] uppercase hover:text-stone-900 transition-colors border-b border-stone-300 pb-0.5">
+                Enviar otro mensaje
+              </button>
+            </div>
+          }
+
+          <!-- Form -->
+          @if (status() !== 'success') {
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">
+                    Nombre <span class="text-stone-400">*</span>
+                  </label>
+                  <input type="text" [(ngModel)]="form.name" name="name"
+                         placeholder="Tu nombre"
+                         class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
+                </div>
+                <div>
+                  <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Teléfono</label>
+                  <input type="tel" [(ngModel)]="form.phone" name="phone"
+                         placeholder="81 1234 5678"
+                         class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">
+                  Email <span class="text-stone-400">*</span>
+                </label>
+                <input type="email" [(ngModel)]="form.email" name="email"
+                       placeholder="tu@email.com"
+                       class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300" />
+              </div>
+
+              <div>
+                <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">Tipo de sesión</label>
+                <select [(ngModel)]="form.sessionType" name="sessionType"
+                        class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all">
+                  <option value="">Selecciona una opción</option>
+                  @for (cat of data.categories; track cat.id) {
+                    @if (cat.id !== 'all') {
+                      <option [value]="cat.label">{{ cat.label }}</option>
+                    }
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label class="text-stone-600 text-xs tracking-[0.2em] uppercase block mb-2 font-semibold">
+                  Mensaje <span class="text-stone-400">*</span>
+                </label>
+                <textarea rows="5" [(ngModel)]="form.message" name="message"
+                          placeholder="Cuéntame sobre tu evento o sesión..."
+                          class="w-full bg-stone-50 border border-stone-200 text-stone-800 text-sm px-4 py-3 focus:border-stone-500 focus:bg-white outline-none transition-all placeholder:text-stone-300 resize-none"></textarea>
+              </div>
+
+              <!-- Error -->
+              @if (status() === 'error') {
+                <p class="text-red-500 text-xs tracking-wide text-center">
+                  Hubo un error al enviar. Intenta de nuevo o escríbeme directo por WhatsApp.
+                </p>
+              }
+
+              <button (click)="handleSubmit()"
+                      [disabled]="status() === 'sending'"
+                      class="w-full bg-stone-900 text-white text-xs tracking-[0.2em] uppercase py-4 hover:bg-stone-700 transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (status() === 'sending') {
+                  Enviando...
+                } @else {
+                  Enviar mensaje
+                }
+              </button>
+            </div>
+          }
         </div>
       </div>
     </div>
   `,
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit {
   protected data = inject(DataService);
-  protected sent = signal(false);
+  protected status = signal<FormStatus>('idle');
+
+  protected form: ContactForm = {
+    name: '',
+    email: '',
+    phone: '',
+    sessionType: '',
+    message: '',
+  };
+
+  private readonly EMAILJS_SERVICE  = 'service_svw22ze';
+  private readonly EMAILJS_TEMPLATE = 'template_aryli4p';
+  private readonly EMAILJS_KEY      = '-bclJUaZhcy_6RJY_';
+
+  ngOnInit(): void {
+  }
+
   protected get whatsappUrl(): string { return `https://wa.me/${this.data.photographerInfo.whatsapp}`; }
   protected get emailUrl(): string { return `mailto:${this.data.photographerInfo.email}`; }
 
-  protected categories = this.data.categories;
-  protected handleSubmit(event: Event): void {
-    event.preventDefault();
-    this.sent.set(true);
+  protected async handleSubmit(): Promise<void> {
+    if (!this.form.name || !this.form.email || !this.form.message) return;
+
+    this.status.set('sending');
+
+    try {
+      const ejs = (window as any)['emailjs'];
+      if (!ejs) throw new Error('EmailJS no cargado');
+
+      await ejs.send(
+        this.EMAILJS_SERVICE,
+        this.EMAILJS_TEMPLATE,
+        {
+          name:         this.form.name,
+          email:        this.form.email,
+          phone:        this.form.phone || 'No proporcionado',
+          session_type: this.form.sessionType || 'No especificado',
+          title:        this.form.sessionType || 'Consulta general',
+          message:      this.form.message,
+        },
+        this.EMAILJS_KEY
+      );
+      this.status.set('success');
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      this.status.set('error');
+    }
+  }
+
+  protected resetForm(): void {
+    this.form = { name: '', email: '', phone: '', sessionType: '', message: '' };
+    this.status.set('idle');
   }
 }

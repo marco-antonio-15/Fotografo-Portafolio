@@ -1,18 +1,20 @@
 import { Component, inject, signal } from '@angular/core';
 import { DataService } from '@core/services/data.service';
 import { LightboxComponent } from '@shared/components/lightbox/lightbox.component';
+import { RevealDirective } from '@shared/directives/reveal.directive';
 import { Photo, PhotoCategory } from '@core/models';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [LightboxComponent],
+  imports: [LightboxComponent, RevealDirective],
   template: `
     <div class="bg-[#faf9f7] min-h-screen pt-24">
 
       <div class="text-center py-16 px-6 border-b border-stone-200">
-        <p class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Mi trabajo</p>
-        <h1 class="text-stone-900 text-5xl md:text-6xl font-light"
+        <p appReveal="fade" class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Mi trabajo</p>
+        <h1 appReveal="slide-up" [revealDelay]="100"
+            class="text-stone-900 text-5xl md:text-6xl font-light"
             style="font-family:'Cormorant Garamond',serif">Portafolio</h1>
       </div>
 
@@ -28,11 +30,12 @@ import { Photo, PhotoCategory } from '@core/models';
         </div>
       </div>
 
-      <!-- Masonry grid -->
+      <!-- Masonry grid con stagger -->
       <div class="max-w-7xl mx-auto px-6 py-12">
         <div class="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 space-y-3">
-          @for (photo of data.filteredPhotos(); track photo.id) {
-            <div class="break-inside-avoid cursor-pointer overflow-hidden group relative"
+          @for (photo of data.filteredPhotos(); track photo.id; let i = $index) {
+            <div appReveal="stagger" [revealDelay]="(i % 8) * 80"
+                 class="break-inside-avoid cursor-pointer overflow-hidden group relative"
                  (click)="selectedPhoto.set(photo)">
               <img [src]="photo.src" [alt]="photo.alt" loading="lazy"
                    class="w-full block transition-transform duration-700 group-hover:scale-105" />
