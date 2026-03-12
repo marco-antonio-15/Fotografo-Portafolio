@@ -1,25 +1,30 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DataService } from '@core/services/data.service';
+import { RevealDirective } from '@shared/directives/reveal.directive';
 
 @Component({
   selector: 'app-services-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RevealDirective],
   template: `
     <div class="bg-[#faf9f7] min-h-screen pt-24">
 
       <div class="text-center py-16 px-6 border-b border-stone-200">
-        <p class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Lo que ofrezco</p>
-        <h1 class="text-stone-900 text-5xl md:text-6xl font-light" style="font-family:'Cormorant Garamond',serif">
+        <p appReveal="fade" class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-4">Lo que ofrezco</p>
+        <h1 appReveal="slide-up" [revealDelay]="100"
+            class="text-stone-900 text-5xl md:text-6xl font-light"
+            style="font-family:'Cormorant Garamond',serif">
           Servicios
         </h1>
       </div>
 
       <div class="max-w-7xl mx-auto px-6 py-20">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          @for (service of data.services; track service.id) {
-            <div [class]="getCardClass(service.id)" (click)="toggleExpand(service.id)">
+          @for (service of data.services; track service.id; let i = $index) {
+            <div appReveal="stagger" [revealDelay]="(i % 3) * 150"
+                 [class]="getCardClass(service.id)"
+                 (click)="toggleExpand(service.id)">
 
               <span class="text-stone-500 text-xs tracking-[0.25em] uppercase font-medium mb-4 block">
                 {{ getCategoryLabel(service.category) }}
@@ -67,20 +72,23 @@ import { DataService } from '@core/services/data.service';
 
         <!-- CTA -->
         <div class="text-center mt-24 border-t border-stone-200 pt-20">
-          <p class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-6">¿Listo para empezar?</p>
-          <h2 class="text-stone-900 text-4xl font-light mb-6" style="font-family:'Cormorant Garamond',serif">
+          <p appReveal="fade" class="text-stone-500 text-xs tracking-[0.3em] uppercase font-medium mb-6">¿Listo para empezar?</p>
+          <h2 appReveal="slide-up" [revealDelay]="100"
+              class="text-stone-900 text-4xl font-light mb-6"
+              style="font-family:'Cormorant Garamond',serif">
             Solicita una cotización
           </h2>
-          <p class="text-stone-700 text-sm mb-10 max-w-lg mx-auto">
+          <p appReveal="slide-up" [revealDelay]="200"
+             class="text-stone-700 text-sm mb-10 max-w-lg mx-auto">
             Cada proyecto es único. Cuéntame sobre tu evento y te envío una propuesta personalizada sin compromiso.
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <div appReveal="slide-up" [revealDelay]="300"
+               class="flex flex-col sm:flex-row gap-4 justify-center">
             <a routerLink="/contacto"
                class="bg-stone-900 text-white text-xs tracking-[0.2em] uppercase px-10 py-4 hover:bg-stone-700 transition-all duration-300">
               Solicitar cotización
             </a>
-            <a [href]="whatsappCotizarUrl"
-               target="_blank"
+            <a [href]="whatsappCotizarUrl" target="_blank"
                class="border border-stone-300 text-stone-800 text-xs font-medium tracking-[0.2em] uppercase px-10 py-4 hover:border-stone-900 hover:text-stone-900 transition-all duration-300">
               WhatsApp directo
             </a>
